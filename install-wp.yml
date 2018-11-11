@@ -2,6 +2,7 @@
 - hosts: wordpress_nodes
   become: yes
   vars:
+    project_name: "HelloWorld"
     mysql_password: "CHANGE_ME_123"
     AUTH_KEY: "CHANGE_ME_123"
     SECURE_AUTH_KEY: "CHANGE_ME_123"
@@ -28,10 +29,14 @@
     get_url:
       url: https://wordpress.org/latest.zip
       dest: /tmp/wp.zip
+  - name: "Create project directory"
+    file:
+      path: "/var/www/{{project_name}}/"
+      state: directory
   - name: "Unzip wordpress"
     unarchive:
       src: /tmp/wp.zip
-      dest: /var/www/
+      dest: "/var/www/{{project_name}}/"
       remote_src: yes
   - name: "Start web server"
     service:
@@ -39,11 +44,11 @@
       state: restarted
   - name: "Create db"
     mysql_db:
-      name: wp-db
+      name: "{{project_name}}"
       state: present
   - name: "Create db user"
     mysql_user:
-      name: "wp-user"
+      name: "user_{{project_name}}"
       password: "{{mysql_password}}"
       priv: '*.*:ALL'
       state: present
@@ -54,7 +59,7 @@
   - name: "Copy wp config"
     template:
       src: ./templates/wp-config.php
-      dest: /var/www/wp-config.php
+      dest: "/var/www/{{project_name}}/wp-config.php"
   - name: "Start web server"
     service:
       name: httpd

@@ -17,8 +17,8 @@
  *
  * @package WordPress
  */
-define('DB_NAME', 'wp-db');
-define('DB_USER', 'wp-user');
+define('DB_NAME', '{{project_name}}');
+define('DB_USER', 'user_{{project_name}}');
 define('DB_PASSWORD', '{{mysql_password}}');
 define('DB_HOST', 'localhost');
 define('DB_CHARSET', 'utf8');
