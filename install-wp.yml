@@ -1,0 +1,61 @@
+---
+- hosts: wordpress_nodes
+  become: yes
+  vars:
+    mysql_password: "CHANGE_ME_123"
+    AUTH_KEY: "CHANGE_ME_123"
+    SECURE_AUTH_KEY: "CHANGE_ME_123"
+    LOGGED_IN_KEY: "CHANGE_ME_123"
+    NONCE_KEY: "CHANGE_ME_123"
+    AUTH_SALT: "CHANGE_ME_123"
+    SECURE_AUTH_SALT: "CHANGE_ME_123"
+    LOGGED_IN_SALT: "CHANGE_ME_123"
+    NONCE_SALT: "CHANGE_ME_123"
+  tasks:
+  - name: "Install packages"
+    yum:
+      name: "{{packages}}"
+      state: latest
+    vars:
+      packages:
+      - httpd
+      - mariadb
+      - mariadb-server
+      - php
+      - php-mysql
+      - MySQL-python
+  - name: "Download wordpress"
+    get_url:
+      url: https://wordpress.org/latest.zip
+      dest: /tmp/wp.zip
+  - name: "Unzip wordpress"
+    unarchive:
+      src: /tmp/wp.zip
+      dest: /var/www/
+      remote_src: yes
+  - name: "Start web server"
+    service:
+      name: mariadb
+      state: restarted
+  - name: "Create db"
+    mysql_db:
+      name: wp-db
+      state: present
+  - name: "Create db user"
+    mysql_user:
+      name: "wp-user"
+      password: "{{mysql_password}}"
+      priv: '*.*:ALL'
+      state: present
+  - name: "Copy apache config"
+    template:
+      src: ./templates/apache.conf
+      dest: /etc/httpd/conf.d/wp.conf
+  - name: "Copy wp config"
+    template:
+      src: ./templates/wp-config.php
+      dest: /var/www/wp-config.php
+  - name: "Start web server"
+    service:
+      name: httpd
+      state: restarted
